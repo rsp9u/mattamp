@@ -40,5 +40,5 @@ Enables big emoji for Mattermost like [slamp](https://github.com/16g/slamp).
 * If `IMPERSONATE` option is true, emoji message is posted as user post completly.
 * If `IMPERSONATE` option is false, emoji message is displayed as a return of slash command (added `BOT`).
 
-* If `IMPERSONATE` option is true, this server will create and store as a local file.
+* If `IMPERSONATE` option is true, this server will automatically create User Access Token and store it as a local file.
   - Use the option internally.
