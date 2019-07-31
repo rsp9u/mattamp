@@ -58,7 +58,7 @@ def upload_emoji(emoji_name, channel_id):
         print("error: not found emoji {}".format(emoji_name))
         return None
 
-    img_resp = requests.get("{}/emoji/{}/image".format(MATTER_API, emoji["id"]), headers=AUTH_HEADER)
+    img_resp = requests.get("{}/emoji/{}/image".format(MATTER_API, emoji[0]["id"]), headers=AUTH_HEADER)
     if not img_resp.ok:
         print("error: failed to get emoji image; {}".format(img_resp.text))
         return None
