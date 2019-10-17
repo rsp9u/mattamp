@@ -9,6 +9,7 @@ from http.server import HTTPServer, SimpleHTTPRequestHandler
 # envs
 ADMIN_TOKEN = os.environ.get("ADMIN_TOKEN")
 MATTER_HOST = os.environ.get("MATTER_HOST")
+MATTER_EXTERNAL_HOST = os.environ.get("MATTER_EXTERNAL_HOST", MATTER_HOST)
 LISTEN_PORT = int(os.environ.get("LISTEN_PORT"))
 IMAGE_WIDTH = os.environ.get("IMAGE_WIDTH")
 IMAGE_HEIGHT = os.environ.get("IMAGE_HEIGHT")
@@ -130,6 +131,11 @@ class RequestHandler(SimpleHTTPRequestHandler, object):
         if public_link is None:
             self._post_with_img_attachment(emoji_name, channel_id)
         else:
+            print("==== Saved public link ====")
+            print(public_link)
+            public_link = public_link.replace(MATTER_HOST, MATTER_EXTERNAL_HOST)
+            print("==== Replaced public link ====")
+            print(public_link)
             self._post_with_img_link(channel_id, user_id, public_link)
 
     def _post_with_img_attachment(self, emoji_name, channel_id):
