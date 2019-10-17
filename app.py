@@ -1,4 +1,5 @@
 import os
+import os.path
 import json
 import urllib
 import requests
@@ -12,10 +13,11 @@ LISTEN_PORT = int(os.environ.get("LISTEN_PORT"))
 IMAGE_WIDTH = os.environ.get("IMAGE_WIDTH")
 IMAGE_HEIGHT = os.environ.get("IMAGE_HEIGHT")
 IMPERSONATE = (os.environ.get("IMPERSONATE") == "true")
+LIST_FILE_DIR = os.environ.get("LIST_FILE_DIR", ".")
 
 # constants
-PUBLINK_LIST = "./publink.list"
-TOKEN_LIST = "./token.list"
+PUBLINK_LIST = os.path.join(LIST_FILE_DIR, "publink.list")
+TOKEN_LIST = os.path.join(LIST_FILE_DIR, "token.list")
 AUTH_HEADER = {"Authorization": "Bearer {}".format(ADMIN_TOKEN)}
 MATTER_API = "{}/api/v4".format(MATTER_HOST)
 IMAGE_SIZE = "={}x{}".format(IMAGE_WIDTH, IMAGE_HEIGHT)
