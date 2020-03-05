@@ -1,10 +1,14 @@
 import os
 import os.path
+import io
+import math
 import json
 import urllib
-import requests
 import traceback
 from http.server import HTTPServer, SimpleHTTPRequestHandler
+
+import requests
+from PIL import Image
 
 # envs
 ADMIN_TOKEN = os.environ.get("ADMIN_TOKEN")
@@ -21,7 +25,6 @@ PUBLINK_LIST = os.path.join(LIST_FILE_DIR, "publink.list")
 TOKEN_LIST = os.path.join(LIST_FILE_DIR, "token.list")
 AUTH_HEADER = {"Authorization": "Bearer {}".format(ADMIN_TOKEN)}
 MATTER_API = "{}/api/v4".format(MATTER_HOST)
-IMAGE_SIZE = "={}x{}".format(IMAGE_WIDTH, IMAGE_HEIGHT)
 
 
 class KeyValueFile:
@@ -52,6 +55,16 @@ publink_file = KeyValueFile(PUBLINK_LIST)
 token_file = KeyValueFile(TOKEN_LIST)
 
 
+def calc_size(w, h):
+    if IMAGE_WIDTH and IMAGE_HEIGHT:
+        return (IMAGE_WIDTH, IMAGE_HEIGHT)
+    if IMAGE_WIDTH:
+        return (IMAGE_WIDTH, math.floor(IMAGE_WIDTH/w * h))
+    if IMAGE_HEIGHT:
+        return (math.floor(IMAGE_HEIGHT/h * w), IMAGE_HEIGHT)
+    return (w, h)
+
+
 def upload_emoji(emoji_name, channel_id):
     print("=== upload_emoji ===")
     emojis = requests.get("{}/emoji".format(MATTER_API), headers=AUTH_HEADER).json()
@@ -66,6 +79,15 @@ def upload_emoji(emoji_name, channel_id):
         print("error: failed to get emoji image; {}".format(img_resp.text))
         return None
 
+    if not img_resp.headers["Content-Type"].startswith("image/png"):
+        print("error: unsupported image file format; {}".format(img_resp.headers["Content-Type"]))
+        return None
+
+    img = Image.open(io.BytesIO(img_resp.content))
+    resized_img = img.resize(calc_size(img.width, img.height))
+    ostream = io.BytesIO()
+    resized_img.save(ostream, format="png")
+
     headers = {'Content-Type': 'application/octet-stream'}
     headers.update(AUTH_HEADER)
     up_resp = requests.post("{}/files".format(MATTER_API),
@@ -74,7 +96,7 @@ def upload_emoji(emoji_name, channel_id):
                                 "filename": emoji_name + ".png",
                                 "channel_id": "6pf6wed9qbnxfq6rwoa6qqjguw"
                             },
-                            data=img_resp.content)
+                            data=ostream.getvalue())
     if not up_resp.ok:
         print("error: failed to upload emoji image; {}".format(up_resp.text))
         return None
@@ -162,7 +184,7 @@ class RequestHandler(SimpleHTTPRequestHandler, object):
         self.end_headers()
 
     def _post_with_img_link(self, channel_id, user_id, public_link):
-        msg = "![]({} {})".format(public_link, IMAGE_SIZE)
+        msg = "![]({})".format(public_link)
 
         if IMPERSONATE:
             token = token_file.read(user_id)
